@@ -39,21 +39,21 @@ class Magma:
         # Шифрование.
         t = TextConverter(self.__encoding)
         message = t.str2bin(message, 8)
-        key = self.__round_key(key)
+        key = self.__round_key(key) # type: ignore
 
         enc = []
         for i in message:
-            enc.append(self.__G(i, key))
+            enc.append(self.__G(i, key)) # type: ignore
 
         return enc
 
     def decode(self, message: list[bytearray], key: str):
         # Дешифрование.
-        key = self.__round_key(key)[::-1]
+        key = self.__round_key(key)[::-1] # type: ignore
         t = TextConverter(self.__encoding)
         enc = []
         for i in message:
-            enc.append(self.__G(i, key))
+            enc.append(self.__G(i, key)) # type: ignore
 
         return t.bin2str(enc)
 
@@ -79,12 +79,12 @@ class Magma:
     @staticmethod
     def __mod32(block: bytes, key: bytes) -> bytes:
         # Сумма по модулю 2^32 - (block + key) mod 2**32.
-        block = int.from_bytes(block, "big")
-        key = int.from_bytes(key, "big")
+        block = int.from_bytes(block, "big") # type: ignore
+        key = int.from_bytes(key, "big") # type: ignore
 
         block = (block + key) % 2 ** 32
 
-        return block.to_bytes(4)
+        return block.to_bytes(4, "big") # type: ignore
 
     @staticmethod
     def __t_box(block: bytes) -> bytearray:
@@ -105,24 +105,24 @@ class Magma:
     @staticmethod
     def __shift11(block: bytes) -> bytes:
         # Циклический сдвиг блока на 11 бит.
-        block = int.from_bytes(block, "big")
-        block = (block << 11) % (2 ** 32) | (block >> 21)
+        block = int.from_bytes(block, "big") # type: ignore
+        block = (block << 11) % (2 ** 32) | (block >> 21) # type: ignore
 
-        return block.to_bytes(4)
+        return block.to_bytes(4, "big") # type: ignore
 
     @staticmethod
     def __xor(L: bytes, R: bytes) -> bytes:
         # Сумма по модулю 2. -> L xor R
-        L = int.from_bytes(L, "big") ^ int.from_bytes(R, "big")
+        L = int.from_bytes(L, "big") ^ int.from_bytes(R, "big") # type: ignore
 
-        return L.to_bytes(4)
+        return L.to_bytes(4, "big") # type: ignore
 
     @staticmethod
     def __round_key(key: str) -> list[bytes]:
         # Генерация 32 32-битных раундовых ключей.
         # Первые 24 - прямая последовательность ключа key, остальные 8 обратная последовательность.
         key = format(int(key, 16), "b").zfill(256)
-        part_key = [int(key[i:i + 32], 2).to_bytes(8) for i in range(0, 256, 32)]
+        part_key = [int(key[i:i + 32], 2).to_bytes(8, "big") for i in range(0, 256, 32)]
         all_key = part_key * 3 + part_key[::-1]
 
         return all_key
